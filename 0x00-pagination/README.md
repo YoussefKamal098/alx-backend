@@ -76,8 +76,8 @@ Deletion-resilient pagination is especially helpful in applications where record
 
 For additional guidance, please refer to:
 
-- [REST API Design: Pagination](https://example.com/resource-pagination)
-- [HATEOAS](https://example.com/resource-hateoas)
+- [REST API Design: Pagination](https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/#pagination)
+- [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS)
 
 These resources provide foundational knowledge on RESTful pagination and hypermedia principles, which will support your project implementation.
 
