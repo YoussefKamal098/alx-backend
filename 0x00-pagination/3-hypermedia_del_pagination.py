@@ -39,7 +39,10 @@ class Server:
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        """Returns a dictionary with pagination info that is resilient to deletions"""
+        """
+        Returns a dictionary with pagination info
+        that is resilient to deletions
+        """
         assert 0 <= index < len(self.indexed_dataset()), "Index out of range"
 
         data = []
