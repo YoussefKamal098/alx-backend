@@ -23,11 +23,13 @@ class FIFOCache(BaseCaching):
         if key is None or item is None:
             return
 
-        self.cache_data[key] = item
+        if (len(self.cache_data) >= BaseCaching.MAX_ITEMS and
+                key not in self.cache_data):
+            last_key, _ = self.cache_data.popitem(last=False)
+            print("DISCARD:", last_key)
 
-        if len(self.cache_data) > BaseCaching.MAX_ITEMS:
-            first_key, _ = self.cache_data.popitem(False)
-            print("DISCARD:", first_key)
+        self.cache_data[key] = item
+        self.cache_data.move_to_end(key, last=False)
 
     def get(self, key):
         """Retrieves an item by key.
