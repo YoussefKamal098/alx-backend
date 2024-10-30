@@ -1,5 +1,23 @@
 # 0x01. Caching
 
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Background Context](#background-context)
+3. [Learning Objectives](#learning-objectives)
+4. [Resources](#resources)
+5. [Project Requirements](#project-requirements)
+6. [Implementation Details](#implementation-details)
+7. [Caching Strategies](#caching-strategies)
+    - [1. FIFO (First-In First-Out)](#1-fifo-first-in-first-out)
+    - [2. LIFO (Last-In First-Out)](#2-lifo-last-in-first-out)
+    - [3. LFU (Least Frequently Used)](#3-lfu-least-frequently-used)
+    - [4. MRU (Most Recently Used)](#4-mru-most-recently-used)
+    - [5. LRU (Least Recently Used)](#5-lru-least-recently-used)
+8. [Using `OrderedDict`](#using-ordereddict)
+9. [Testing](#testing)
+10. [Final Notes](#final-notes)
+
 ## Project Overview
 
 This project introduces caching systems and explores various caching algorithms to optimize data retrieval. Through hands-on implementation, we study the behaviors and efficiency of multiple cache replacement policies and understand the purpose and limitations of caching. Implementing caching mechanisms such as FIFO, LIFO, LRU, MRU, and LFU provides practical insights into memory management strategies, often used in software design for enhancing performance in data-heavy applications.
@@ -20,7 +38,7 @@ By completing this project, you will be able to:
   - MRU (Most Recently Used)
   - LFU (Least Frequently Used)
 - Understand the limitations and constraints of caching systems.
-  
+
 ## Resources
 
 To support your understanding, you may refer to the following resources:
@@ -114,10 +132,106 @@ def get(self, key):
     """
 ```
 
+## Caching Strategies
+
+Here’s a breakdown of how each caching strategy handles item **reinsertion** (when an item already in the cache is inserted again). Each strategy treats reinsertion differently based on its core principles:
+
+| **Strategy**     | **Insert Behavior**                                                    | **Remove Behavior**                                                                            | **Reinsert Behavior**                                                                                                                                      | **Use Case** |
+|------------------|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| **FIFO**         | Items are added to the end of the cache.                                | Removes the oldest item (first inserted) when the cache is full.                               | No position change on reinsertion; keeps the original insertion order.                                                                                     | Retains longest-used items until capacity is reached. |
+| **LIFO**         | Items are added to the end of the cache; reinserting updates the last position. | Removes the most recent item (last inserted) when the cache is full.                           | Moves the item to the end (most recent position) when reinserted, effectively treating it as a new item.                                                  | Refreshes recent data frequently, retaining older items longer. |
+| **LFU**          | Items are added with an access counter that increments each access.      | Removes the least frequently accessed item; if counts match, the oldest by insertion is removed. | Increases the access count on reinsertion without moving its position, reflecting higher priority but retaining time order if counts are the same.        | Ideal for data accessed often; prioritizes commonly used items. |
+| **MRU**          | Items are added to the end, with the most recent access updating its position. | Removes the most recently accessed item when the cache is full.                                | Moves the item to the end when reinserted, marking it as "most recently used" and reprioritizing it in the cache.                                          | Good for caching patterns where most recent access indicates temporary or short-lived usage. |
+| **LRU**          | Items are added normally, moving the accessed item to "most recent."    | Removes the least recently accessed item when the cache is full.                               | Moves the item to the end on reinsertion, making it the "most recently used," giving it higher priority in cache retention.                                | Great for scenarios where frequently accessed items remain needed. |
+
+
+## Using `OrderedDict`
+
+`OrderedDict` is a specialized dictionary in Python's `collections` module that maintains the order of items as they are added. This property is essential for implementing various caching strategies effectively. Below, we will explore some of the key methods of `OrderedDict` that are particularly relevant to caching, along with the data structures and algorithms used in its implementation.
+
+### Data Structures in `OrderedDict`
+
+Internally, `OrderedDict` is implemented using two main data structures:
+
+1. **Doubly Linked List**:
+   - `OrderedDict` maintains a doubly linked list of the entries (key-value pairs). Each entry contains pointers to both the previous and next entries. This allows for efficient insertion, deletion, and traversal of items while preserving their order.
+   - The use of a doubly linked list ensures that when an item is accessed or modified, it can be quickly moved to the front or back of the list as needed.
+
+2. **Hash Table**:
+   - Alongside the doubly linked list, `OrderedDict` uses a hash table (or dictionary) to map keys to their corresponding nodes in the linked list. This enables fast access to items by key.
+   - The hash table allows for average-case O(1) time complexity for lookups, insertions, and deletions, while the linked list ensures that the order of items is maintained.
+
+### Key Methods of `OrderedDict`
+
+1. **`move_to_end(key, last=True)`**:
+   - This method moves the specified key to either the end (if `last=True`) or the beginning (if `last=False`) of the `OrderedDict`.
+   - **Use in Caching**:
+     - In strategies like LRU and MRU, this method is critical for updating the position of an item to reflect its recent access. When an item is accessed (or reinserted), it can be moved to the end of the dictionary to indicate that it was the most recently used.
+
+   **Example**:
+   ```python
+   from collections import OrderedDict
+
+   cache = OrderedDict()
+   cache['A'] = 1
+   cache['B'] = 2
+   cache.move_to_end('A')  # Moves 'A' to the end
+   ```
+
+2. **`popitem(last=True)`**:
+   - This method removes and returns a key-value pair from the `OrderedDict`. If `last=True`, it removes the last item; if `last=False`, it removes the first item.
+   - **Use in Caching**:
+     - This method is useful for removing items when the cache exceeds its capacity. Depending on the caching strategy, it can remove the oldest item (FIFO), the most recent (LIFO), or the least recently used (LRU).
+
+   **Example**:
+   ```python
+   item = cache.popitem(last=False)  # Removes the first inserted item
+   ```
+
+3. **`__setitem__(key, value)`**:
+   - This method is used to insert or update a key-value pair in the `OrderedDict`.
+   - **Use in Caching**:
+     - When inserting a new item or updating an existing item, this method can implicitly handle reinsertion. For example, if the item already exists, it is updated and moved to the end to signify that it has been recently accessed.
+
+   **Example**:
+   ```python
+   cache['C'] = 3  # Adds a new item
+   cache['A'] = 10  # Updates 'A' and moves it to the end
+   ```
+
+4. **`__delitem__(key)`**:
+   - This method allows you to delete a specific key from the `OrderedDict`.
+   - **Use in Caching**:
+     - This can be used for explicitly removing items when certain conditions are met, such as when an item is evicted due to cache limits or when an item needs to be cleared from the cache for any reason.
+
+   **Example**:
+   ```python
+   del cache['B']  # Removes 'B' from the cache
+   ```
+
+### Reinserting Items
+
+When an item is reinserted into the `OrderedDict`, the following happens depending on the caching strategy:
+
+- **FIFO**: The order remains the same; reinserted items do not affect their position.
+- **LIFO**: The item moves to the end, marking it as the most recent.
+- **LFU**: The access count increases, but the position does not change, maintaining the frequency order.
+- **MRU**: The item moves to the end to mark it as recently used.
+- **LRU**: The item moves to the end, updating its status to the most recently accessed.
+
+
 ## Testing
 
-Testing and verifying the caching behavior can be done by running the scripts with `npm run dev` for JavaScript-based projects or directly executing the Python files. Logs should be checked for the expected caching behavior and eviction as per the cache policies.
+Ensure to conduct tests for each caching strategy implemented to verify:
+
+- Correctness of data retrieval.
+- Proper cache size limitations.
+- Correct removal behavior based on the chosen strategy.
+
+Example test case scenarios could include adding items beyond capacity, retrieving non-existent keys, and verifying that items are removed according to the caching strategy.
 
 ## Final Notes
 
-This project’s completion will give you a deep understanding of caching policies and prepare you for implementing efficient caching mechanisms in real-world applications.
+The goal of this project is not only to implement different caching strategies but also to understand the implications of using these strategies in real-world applications. By the end of this project, you should have a comprehensive understanding of caching principles and their practical applications in software design.
+
+
