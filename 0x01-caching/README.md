@@ -228,6 +228,107 @@ Ensure to conduct tests for each caching strategy implemented to verify:
 - Proper cache size limitations.
 - Correct removal behavior based on the chosen strategy.
 
+To execute a docstring containing test cases (like the one I've provided) from a `.txt` file in Python, you can use the `doctest` module. The example you've provided uses a Fish shell script to run Python's `doctest` against a Python module. Here's how you can set it up and run it step-by-step.
+
+### Step 1: Save Your Docstring as a Text File
+First, ensure that your docstring tests are saved in a `.txt` file. For example, you could name it `test_lfu_cache.txt`.
+
+### Step 2: Create Your LFUCache Implementation
+Ensure that you have the implementation of your `LFUCache` class in a Python file, e.g., `100-lfu_cache.py`.
+
+### Step 3: Running the Tests Using Python
+You can run your doctests directly from the command line or from a Python script. Below are both methods.
+
+#### Method 1: From the Command Line
+Using the Fish shell script you've provided, you can run the tests in your terminal. Ensure you are in the directory where your `test_lfu_cache.txt` and `100-lfu_cache.py` files are located.
+
+1. Open your terminal and create a Fish shell script file, e.g., `run_tests.fish`:
+
+    ```fish
+    #!/usr/bin/env fish
+    python3 -m doctest -v (basename (status -f))
+    exit
+    ```
+
+2. Make the script executable:
+
+    ```bash
+    chmod +x run_tests.fish
+    ```
+
+3. Run the script:
+
+    ```bash
+    ./run_tests.fish test_lfu_cache.txt
+    ```
+
+#### Method 2: From a Python Script
+Alternatively, you can create a Python script to run the tests directly. Create a new Python file, e.g., `run_tests.py`, with the following code:
+
+```python
+import doctest
+
+# Specify the filename of your test file
+filename = 'test_lfu_cache.txt'
+
+# Run doctests
+doctest.testfile(filename, module_relative=False, globs={'LFUCache': __import__('100-lfu_cache').LFUCache}, optionflags=doctest.REPORT_ONLY_FIRST_FAILURE)
+```
+
+### Step 4: Run Your Python Script
+After creating the `run_tests.py` file, run it in the terminal:
+
+```bash
+python3 run_tests.py
+```
+
+### Key Points
+- **Ensure the Import Works**: In the `doctest.testfile` function, make sure that the import path for `LFUCache` is correct and matches your project's structure.
+- **Doctest Options**: The `optionflags` argument can be customized based on your needs. The example uses `doctest.REPORT_ONLY_FIRST_FAILURE` to stop at the first failure for easier debugging.
+
+### Example of a Full Test Setup
+
+1. **`100-lfu_cache.py`**:
+    ```python
+    class LFUCache:
+        # Your LFUCache implementation here...
+        pass
+    ```
+
+2. **`test_lfu_cache.txt`**:
+    ```python
+    """
+    >>> LFUCache = __import__('100-lfu_cache').LFUCache
+    >>> my_cache = LFUCache()
+    >>> my_cache.put("A", "Hello")
+    >>> my_cache.put("B", "World")
+    >>> my_cache.put("C", "Holberton")
+    >>> my_cache.put("D", "School")
+    >>> my_cache.print_cache()
+    Current cache:
+    A: Hello
+    B: World
+    C: Holberton
+    D: School
+
+    >>> print(my_cache.get("B"))
+    World
+    ...
+    """
+    ```
+
+3. **`run_tests.py`**:
+    ```python
+    import doctest
+
+    # Specify the filename of your test file
+    filename = 'test_lfu_cache.txt'
+
+    # Run doctests
+    doctest.testfile(filename, module_relative=False, globs={'LFUCache': __import__('100-lfu_cache').LFUCache}, optionflags=doctest.REPORT_ONLY_FIRST_FAILURE)
+    ```
+
+
 Example test case scenarios could include adding items beyond capacity, retrieving non-existent keys, and verifying that items are removed according to the caching strategy.
 
 ## Final Notes
