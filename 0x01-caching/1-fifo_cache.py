@@ -33,6 +33,7 @@ class FIFOCache(BaseCaching):
             print("DISCARD:", last_key)
 
         self.cache_data[key] = item
+        self.cache_data.move_to_end(key)
 
     def get(self, key):
         """Retrieves an item by key.
