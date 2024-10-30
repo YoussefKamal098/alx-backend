@@ -29,8 +29,8 @@ class LIFOCache(BaseCaching):
             return
 
         if self.is_full() and key not in self.cache_data:
-            last_key, _ = self.cache_data.popitem()
-            print("DISCARD:", last_key)
+            last_inserted_key, _ = self.cache_data.popitem(last=True)
+            print("DISCARD:", last_inserted_key)
 
         self.cache_data[key] = item
         self.cache_data.move_to_end(key)

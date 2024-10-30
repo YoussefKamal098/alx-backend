@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""First-In First-Out caching module.
+"""Least Recently Used caching module.
 """
 from collections import OrderedDict
 
 from base_caching import BaseCaching
 
 
-class FIFOCache(BaseCaching):
+class LRUCache(BaseCaching):
     """Represents an object that allows storing and
-    retrieving items from a dictionary with a FIFO
+    retrieving items from a dictionary with an LRU
     removal mechanism when the limit is reached.
     """
     def __init__(self):
@@ -29,12 +29,16 @@ class FIFOCache(BaseCaching):
             return
 
         if self.is_full() and key not in self.cache_data:
-            first_inserted_key, _ = self.cache_data.popitem(last=False)
-            print("DISCARD:", first_inserted_key)
+            least_recent_access_key, _ = self.cache_data.popitem(last=False)
+            print("DISCARD:", least_recent_access_key)
 
         self.cache_data[key] = item
+        self.cache_data.move_to_end(key)
 
     def get(self, key):
         """Retrieves an item by key.
         """
+        if key is not None and key in self.cache_data:
+            self.cache_data.move_to_end(key)
+
         return self.cache_data.get(key, None)
