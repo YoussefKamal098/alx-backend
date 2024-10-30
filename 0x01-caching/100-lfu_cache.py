@@ -13,6 +13,9 @@ class Node:
         self.item = item
         self.frequency = frequency
 
+    def __str__(self):
+        return f"{self.item}"
+
 
 class LFUCache(BaseCaching):
     """Represents an object that allows storing and
@@ -82,8 +85,9 @@ class LFUCache(BaseCaching):
 
     def _evict_lfu_key(self) -> None:
         """Evict the least frequently used key from the cache."""
-        lfu_key, _ = self.freq_map[self.min_freq].popitem(last=False)
-        del self.cache_data[lfu_key]
+        least_freq_key, _ = self.freq_map[self.min_freq].popitem(last=False)
+        print("DISCARD:", least_freq_key)
+        del self.cache_data[least_freq_key]
 
     def get(self, key: Hashable) -> Optional[Any]:
         """Retrieves an item by key.
