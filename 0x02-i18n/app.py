@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """A simple flask i18n app"""
+from datetime import datetime
 from functools import wraps
-from typing import Callable
+from typing import Callable, Any
 
 from flask import Flask, render_template, request, g
 from flask_babel import Babel
@@ -52,7 +53,7 @@ def get_locale() -> str:
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-def validate_timezone(func: Callable) -> Callable:
+def validate_timezone(func: Callable[..., str]) -> Callable[..., Any]:
     """
     Decorator to validate the timezone returned by the `get_timezone`
     function.
@@ -65,9 +66,13 @@ def validate_timezone(func: Callable) -> Callable:
         timezone = func(*args, **kwargs)
 
         try:
-            return pytz.timezone(timezone).zone
+            g.timezone = datetime.now(pytz.timezone(timezone).zone)
         except pytz.exceptions.UnknownTimeZoneError:
-            return pytz.timezone(app.config['BABEL_DEFAULT_TIMEZONE']).zone
+            g.time = datetime.now(
+                pytz.timezone(app.config['BABEL_DEFAULT_TIMEZONE'])
+            )
+
+        return g.time
 
     return decorated_function
 
@@ -78,6 +83,7 @@ def get_timezone() -> str:
     """
     Selects the timezone from the request, user, or defaults.
     """
+    print("getting timezone \n\n\n")
     timezone = request.args.get('timezone')
     if timezone:
         return timezone
@@ -110,7 +116,7 @@ def before_request():
 @app.route('/')
 def index() -> str:
     """ Renders an index.html template """
-    return render_template('7-index.html')
+    return render_template('index.html')
 
 
 if __name__ == '__main__':
