@@ -83,7 +83,6 @@ def get_timezone() -> str:
     """
     Selects the timezone from the request, user, or defaults.
     """
-    print("getting timezone \n\n\n")
     timezone = request.args.get('timezone')
     if timezone:
         return timezone
