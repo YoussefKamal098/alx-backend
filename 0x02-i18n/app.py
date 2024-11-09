@@ -5,7 +5,7 @@ from functools import wraps
 from typing import Callable
 
 from flask import Flask, render_template, request, g
-from flask_babel import Babel
+from flask_babel import Babel, format_datetime
 import pytz
 
 
@@ -53,7 +53,7 @@ def get_locale() -> str:
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-def validate_timezone(func: Callable[..., str]) -> Callable[..., datetime]:
+def validate_timezone(func: Callable[..., str]) -> Callable[..., str]:
     """
     Decorator to validate the timezone returned by the `get_timezone`
     function.
@@ -62,17 +62,13 @@ def validate_timezone(func: Callable[..., str]) -> Callable[..., datetime]:
     returns the default timezone.
     """
     @wraps(func)
-    def decorated_function(*args, **kwargs) -> datetime:
+    def decorated_function(*args, **kwargs) -> str:
         timezone = func(*args, **kwargs)
 
         try:
-            g.timezone = datetime.now(pytz.timezone(timezone).zone)
+            return pytz.timezone(timezone).zone
         except pytz.exceptions.UnknownTimeZoneError:
-            g.time = datetime.now(
-                pytz.timezone(app.config['BABEL_DEFAULT_TIMEZONE'])
-            )
-
-        return g.time
+            return pytz.timezone(app.config['BABEL_DEFAULT_TIMEZONE']).zone
 
     return decorated_function
 
@@ -83,7 +79,6 @@ def get_timezone() -> str:
     """
     Selects the timezone from the request, user, or defaults.
     """
-    print(f"Timezone: {request.args.get('timezone')}")
     timezone = request.args.get('timezone')
     if timezone:
         return timezone
@@ -101,8 +96,11 @@ def get_user():
     Returns a user dictionary or None if the ID cannot be found or
     if the user has no locale set.
     """
-    user_id = int(request.args.get('login_as', -1))
-    return users.get(user_id, None)
+    try:
+        user_id = int(request.args.get('login_as', -1))
+        return users.get(user_id, None)
+    except ValueError:
+        return None
 
 
 @app.before_request
@@ -111,6 +109,7 @@ def before_request():
     Finds a user if any, and sets the locale and timezone for the request.
     """
     g.user = get_user()
+    g.time = format_datetime(datetime.now())
 
 
 @app.route('/')
