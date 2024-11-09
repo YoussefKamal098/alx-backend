@@ -2,7 +2,7 @@
 """A simple flask i18n app"""
 from datetime import datetime
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable
 
 from flask import Flask, render_template, request, g
 from flask_babel import Babel
@@ -53,7 +53,7 @@ def get_locale() -> str:
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
-def validate_timezone(func: Callable[..., str]) -> Callable[..., Any]:
+def validate_timezone(func: Callable[..., str]) -> Callable[..., datetime]:
     """
     Decorator to validate the timezone returned by the `get_timezone`
     function.
@@ -62,7 +62,7 @@ def validate_timezone(func: Callable[..., str]) -> Callable[..., Any]:
     returns the default timezone.
     """
     @wraps(func)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args, **kwargs) -> datetime:
         timezone = func(*args, **kwargs)
 
         try:
@@ -83,6 +83,7 @@ def get_timezone() -> str:
     """
     Selects the timezone from the request, user, or defaults.
     """
+    print(f"Timezone: {request.args.get('timezone')}")
     timezone = request.args.get('timezone')
     if timezone:
         return timezone
