@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """A simple flask i18n app"""
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, g
 from flask_babel import Babel
 
 
@@ -12,6 +12,13 @@ class Config:
     BABEL_DEFAULT_LOCALE = "en"
     BABEL_DEFAULT_TIMEZONE = "UTC"
 
+
+users = {
+    1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
+    2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
+    3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
+    4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
+}
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -32,10 +39,27 @@ def get_locale() -> str:
     return request.accept_languages.best_match(app.config['LANGUAGES'])
 
 
+def get_user():
+    """
+    Returns a user dictionary or None if the ID cannot be found or
+    if the user has no locale set.
+    """
+    user_id = int(request.args.get('login_as', -1))
+    return users.get(user_id, None)
+
+
+@app.before_request
+def before_request():
+    """
+    Finds a user if any, and sets the locale and timezone for the request.
+    """
+    g.user = get_user()
+
+
 @app.route('/')
 def index() -> str:
     """ Renders an index.html template """
-    return render_template('4-index.html')
+    return render_template('5-index.html')
 
 
 if __name__ == '__main__':
