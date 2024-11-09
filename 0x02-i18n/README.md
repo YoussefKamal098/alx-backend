@@ -210,7 +210,7 @@ if __name__ == '__main__':
    ```plaintext
    [python: **.py]
    [jinja2: **/templates/**.html]
-   extensions=jinja2.ext.autoescape,jinja2.ext.with_
+   extensions=jinja2.ext.autoescape,jinja2.ext.with_ // or  jinja2.ext.do with jinja2 3.x.x and above
    ```
 
 2. Extract messages for translation:
