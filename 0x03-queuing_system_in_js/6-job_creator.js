@@ -28,4 +28,3 @@ job.on('complete', () => {
 job.on('failed', (errorMessage) => {
     console.log('Notification job failed:', errorMessage);
 });
-
